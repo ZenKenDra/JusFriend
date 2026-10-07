@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JUSFriend - Smart Calorie Tracker & Healthy F&B</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+            },
+            accent: {
+              50: '#fff7ed',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    @keyframes pulseSoft {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+    .animate-pulse-soft {
+      animation: pulseSoft 2s ease-in-out infinite;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-up {
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-full flex flex-col selection:bg-brand-500 selection:text-white pb-28 md:pb-12">
+
+  <!-- Top Sticky Header -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-200">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      
+      <!-- Brand Logo & Outlet Info -->
+      <div class="flex items-center space-x-3.5 cursor-pointer" onclick="resetToHome()">
+        <!-- Enlarged High-Resolution Logo Container -->
+        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-white p-1 border-2 border-brand-500/20 shadow-lg shadow-brand-500/15 flex items-center justify-center shrink-0 transition-transform hover:scale-105">
+          <img 
+            src="https://lh3.googleusercontent.com/d/1FeKJMCYy6bnsFnGwwfhU3xjAmgOEL8lE=s1000" 
+            alt="Logo Resmi JUSFriend" 
+            class="w-full h-full object-contain filter drop-shadow-sm"
+            loading="eager"
+            onerror="this.onerror=null; this.src='https://drive.google.com/thumbnail?id=1FeKJMCYy6bnsFnGwwfhU3xjAmgOEL8lE&sz=w1000';"
+          />
+        </div>
+        <div>
+          <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2 m-0 leading-tight">
+            <span>JUS<span class="text-brand-600">Friend</span></span>
+            <span class="bg-brand-100 text-brand-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-brand-200 uppercase tracking-wide">Malang</span>
+          </h2>
+          <p class="text-xs text-slate-500 font-medium flex items-center gap-1.5 mt-1">
+            <i class="fa-solid fa-location-dot text-brand-600 text-xs"></i>
+            <span id="outletLocationLabel">Gerai Suhat, Jl. Soekarno Hatta No. 42</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Buttons (Order Mode Pill & Loyalty) -->
+      <div class="flex items-center space-x-2">
+        <button onclick="openLoyaltyModal()" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-stamp text-amber-500"></i>
+          <span class="hidden sm:inline">Stempel:</span>
+          <span class="font-bold text-amber-800" id="stampCountBadge">3/8</span>
+        </button>
+
+        <button onclick="openActiveOrderModal()" id="activeOrderNavBtn" class="hidden relative px-3 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 text-xs font-semibold items-center gap-1.5 transition">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+          <span>Status Pesanan</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Mode Selector & Table / Pickup Switcher Bar -->
+    <div class="bg-slate-50 border-t border-slate-200/80 px-4 py-2">
+      <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2">
+        
+        <!-- Toggle Segment: Dine-In vs Express Pick-Up -->
+        <div class="bg-slate-200 p-1 rounded-xl flex items-center shadow-inner text-xs font-semibold">
+          <button id="modeDineInBtn" onclick="setOrderMode('dine-in')" class="px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-white text-slate-800 shadow-sm">
+            <i class="fa-solid fa-qrcode text-brand-600"></i>
+            <span>Dine-In QR</span>
+          </button>
+          <button id="modePickupBtn" onclick="setOrderMode('pickup')" class="px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900">
+            <i class="fa-solid fa-person-walking-luggage text-accent-600"></i>
+            <span>Express Pick-Up</span>
+          </button>
+        </div>
+
+        <!-- Detail Badge: Table Number or Pickup ETA -->
+        <div id="modeDetailContainer" class="flex items-center gap-2">
+          <!-- Dynamically populated via JS -->
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-4 w-full flex-1">
+    
+    <!-- Hero / Announcement Banner -->
+    <section class="relative overflow-hidden bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 rounded-3xl p-5 md:p-6 text-white shadow-xl mb-6">
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="max-w-lg">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 backdrop-blur-md text-emerald-300 border border-emerald-400/20 mb-3">
+            <i class="fa-solid fa-bolt text-amber-400"></i> Stop Sugar Crash • 100% Buah Murni
+          </span>
+          <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight leading-snug">
+            Makan Sehat, Tahu Pasti Kalori & Proteinmu.
+          </h1>
+          <p class="text-slate-300 text-xs md:text-sm mt-1.5 mb-4 leading-relaxed">
+            Semua jus buah murni tanpa gula & kukusan protein segar dari petani Kota Batu. Pantau asupan gizi harianmu secara live!
+          </p>
+
+          <!-- Member Gym Banner Quick Offer -->
+          <div class="inline-flex items-center gap-2 bg-black/30 backdrop-blur-sm border border-white/10 px-3 py-1.5 rounded-xl text-xs text-emerald-200">
+            <i class="fa-solid fa-dumbbell text-amber-400"></i>
+            <span>Member Gym Malang? Dapatkan <b>Diskon 10%</b> dengan kode: <code class="bg-emerald-950 px-1.5 py-0.5 rounded text-amber-300 font-mono font-bold">MALANGFIT</code></span>
+          </div>
+        </div>
+
+        <!-- Prominent Brand Badge in Hero -->
+        <div class="hidden sm:flex flex-col items-center justify-center bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-3xl shadow-xl shrink-0 self-center">
+          <div class="w-24 h-24 rounded-2xl bg-white p-2 flex items-center justify-center shadow-md">
+            <img 
+              src="https://lh3.googleusercontent.com/d/1FeKJMCYy6bnsFnGwwfhU3xjAmgOEL8lE=s1000" 
+              alt="JUSFriend Official" 
+              class="w-full h-full object-contain"
+              onerror="this.onerror=null; this.src='https://drive.google.com/thumbnail?id=1FeKJMCYy6bnsFnGwwfhU3xjAmgOEL8lE&sz=w1000';"
+            />
+          </div>
+          <span class="text-[11px] font-extrabold text-emerald-300 mt-2 tracking-wider uppercase">Official Store</span>
+        </div>
+      </div>
+
+      <!-- Decorative Juice & Steamer Graphic Outline -->
+      <div class="absolute -right-6 -bottom-8 opacity-10 text-white pointer-events-none text-9xl">
+        <i class="fa-solid fa-glass-water-droplet"></i>
+      </div>
+    </section>
+
+    <!-- SMART CALORIE CONTROLLER & TARGET BAR -->
+    <section class="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-sm">
+            <i class="fa-solid fa-sliders"></i>
+          </div>
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Rekomendasi & Filter Target Kalori</h2>
+            <p class="text-[11px] text-slate-500">Sesuaikan pilihan menu dengan target pola makanmu hari ini</p>
+          </div>
+        </div>
+
+        <!-- Quick Goal Presets -->
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+          <button onclick="applyGoalPreset('all')" class="goal-preset-btn active px-3 py-1 rounded-xl text-xs font-semibold bg-brand-600 text-white transition" data-goal="all">Semua</button>
+          <button onclick="applyGoalPreset('deficit')" class="goal-preset-btn px-3 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition" data-goal="deficit">Defisit (&lt; 250 kkal)</button>
+          <button onclick="applyGoalPreset('protein')" class="goal-preset-btn px-3 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition" data-goal="protein">High Protein (&ge; 14g)</button>
+          <button onclick="applyGoalPreset('sugar')" class="goal-preset-btn px-3 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition" data-goal="sugar">Bebas Gula Alami Rendah</button>
+        </div>
+      </div>
+
+      <!-- Max Calorie Slider Control -->
+      <div class="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+        <div class="flex-1">
+          <div class="flex justify-between items-center text-xs mb-1.5">
+            <span class="font-bold text-slate-700 flex items-center gap-1">
+              <i class="fa-solid fa-fire text-amber-500"></i> Batas Kalori Maksimal per Item:
+            </span>
+            <span class="font-extrabold text-brand-700 bg-brand-100 px-2 py-0.5 rounded-lg" id="calorieSliderValue">Maks. 500 kkal</span>
+          </div>
+          <input type="range" id="calorieRange" min="100" max="500" step="25" value="500" oninput="handleCalorieSlider(this.value)" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600">
+        </div>
+        <div class="flex items-center justify-between md:justify-end gap-2 text-[11px] text-slate-500">
+          <span>Menampilkan <strong id="visibleItemCount" class="text-slate-800">12</strong> menu sehat</span>
+          <button onclick="resetFilters()" class="text-brand-600 hover:text-brand-700 font-bold underline ml-2">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+        <button onclick="setCategory('all')" class="cat-pill active px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap bg-slate-900 text-white shadow-sm transition" data-cat="all">
+          <i class="fa-solid fa-border-all mr-1.5"></i>Semua Menu
+        </button>
+        <button onclick="setCategory('juice')" class="cat-pill px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition" data-cat="juice">
+          <i class="fa-solid fa-glass-water-droplet mr-1.5 text-brand-600"></i>Jus Murni 100%
+        </button>
+        <button onclick="setCategory('steam')" class="cat-pill px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition" data-cat="steam">
+          <i class="fa-solid fa-bowl-food mr-1.5 text-accent-600"></i>Kukusan Protein
+        </button>
+        <button onclick="setCategory('bundle')" class="cat-pill px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition" data-cat="bundle">
+          <i class="fa-solid fa-cubes mr-1.5 text-indigo-600"></i>Paket Kombo Sehat
+        </button>
+      </div>
+
+      <!-- Quick Search input -->
+      <div class="relative hidden sm:block w-48">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+        <input type="text" id="menuSearchInput" oninput="handleSearch(this.value)" placeholder="Cari buah/kukusan..." class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+      </div>
+    </div>
+
+    <div id="menuGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Menu Cards will be injected dynamically via JavaScript -->
+    </div>
+
+    <!-- Empty State if no menu matches filters -->
+    <div id="noResultsState" class="hidden text-center py-12 bg-white rounded-3xl border border-slate-200 p-6">
+      <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-2xl">
+        <i class="fa-solid fa-leaf"></i>
+      </div>
+      <h3 class="text-base font-bold text-slate-800">Tidak ada menu yang sesuai</h3>
+      <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Coba longgarkan batas kalori atau pilih kategori lain.</p>
+      <button onclick="resetFilters()" class="mt-4 px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition">Reset Filter</button>
+    </div>
+
+    <!-- Educational Banner: Mengapa JUSFriend? -->
+    <section class="mt-10 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+      <h3 class="text-base font-extrabold text-slate-900 mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-heart-pulse text-rose-500"></i>
+        Kenapa Mahasiswa Malang Pilih JUSFriend?
+      </h3>
+      <p class="text-xs text-slate-500 mb-4">Standar makanan bersih tanpa kompromi kantong mahasiswa.</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100 flex items-start gap-3">
+          <div class="w-8 h-8 rounded-xl bg-brand-600 text-white flex items-center justify-center shrink-0 text-sm">
+            <i class="fa-solid fa-ban"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">Zero Added Sugar</h4>
+            <p class="text-[11px] text-slate-600 mt-0.5">Manis alami dari buah matang pohon, tanpa kental manis atau fruktosa sirup.</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-100 flex items-start gap-3">
+          <div class="w-8 h-8 rounded-xl bg-accent-600 text-white flex items-center justify-center shrink-0 text-sm">
+            <i class="fa-solid fa-fire-burner"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">100% Bebas Minyak</h4>
+            <p class="text-[11px] text-slate-600 mt-0.5">Kukusan dada ayam & tahu kaya protein tanpa proses deep-fry yang bikin ngantuk.</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-100 flex items-start gap-3">
+          <div class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 text-sm">
+            <i class="fa-solid fa-truck-fast"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">Segar dari Petani Batu</h4>
+            <p class="text-[11px] text-slate-600 mt-0.5">Rantai pasok harian langsung menjaga HPP rendah dan kualitas gizi maksimal.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <aside id="macroBarometerFooter" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-2xl transition-all duration-300 transform translate-y-0">
+    <div class="max-w-4xl mx-auto px-4 py-3">
+      
+      <!-- Live Macro Barometer Progress -->
+      <div class="flex items-center justify-between text-xs mb-2">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5 font-bold text-slate-900">
+            <i class="fa-solid fa-chart-simple text-brand-600"></i>
+            <span>Live Macro:</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-extrabold text-[11px]">
+              <i class="fa-solid fa-fire text-amber-500 text-[10px]"></i> <span id="barometerTotalCal">0</span> kkal
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 font-extrabold text-[11px]">
+              <i class="fa-solid fa-drumstick-bite text-blue-500 text-[10px]"></i> <span id="barometerTotalProtein">0g</span> Protein
+            </span>
+          </div>
+        </div>
+
+        <button onclick="openCartDrawer()" class="text-brand-600 hover:text-brand-700 font-bold text-xs flex items-center gap-1">
+          <span>Rincian</span> <i class="fa-solid fa-chevron-up text-[10px]"></i>
+        </button>
+      </div>
+
+      <!-- Action Row: Items & Checkout Button -->
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <p class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Total Pembayaran</p>
+          <p class="text-lg font-extrabold text-slate-900 leading-tight" id="barometerTotalPrice">Rp 0</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openCartDrawer()" class="px-3.5 py-2.5 rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs flex items-center gap-2 transition">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span id="barometerItemCountBadge" class="bg-brand-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px]">0</span>
+          </button>
+
+          <button onclick="handlePrimaryCheckoutClick()" id="checkoutPrimaryBtn" class="px-5 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md shadow-brand-600/30 flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed">
+            <span>Pesan Sekarang</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <div id="cartDrawer" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden transition-opacity flex justify-end">
+    <div class="bg-white w-full max-w-md h-full flex flex-col shadow-2xl animate-slide-up">
+      
+      <!-- Drawer Header -->
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-sm">
+            <i class="fa-solid fa-basket-shopping"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900">Keranjang Menu Sehat</h3>
+            <p class="text-[11px] text-slate-500" id="cartModeSubhead">Mode: Dine-In Meja 04</p>
+          </div>
+        </div>
+        <button onclick="closeCartDrawer()" class="w-8 h-8 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 flex items-center justify-center text-xs transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Live Nutrition Summary Box inside Cart -->
+      <div class="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100 flex items-center justify-around text-center">
+        <div>
+          <p class="text-[10px] text-slate-500 font-semibold uppercase">Total Kalori</p>
+          <p class="text-base font-extrabold text-amber-600" id="cartTotalCal">0 kkal</p>
+        </div>
+        <div class="w-px h-8 bg-emerald-200"></div>
+        <div>
+          <p class="text-[10px] text-slate-500 font-semibold uppercase">Total Protein</p>
+          <p class="text-base font-extrabold text-blue-600" id="cartTotalProtein">0 g</p>
+        </div>
+        <div class="w-px h-8 bg-emerald-200"></div>
+        <div>
+          <p class="text-[10px] text-slate-500 font-semibold uppercase">Gula Alami</p>
+          <p class="text-base font-extrabold text-emerald-700" id="cartTotalSugar">0 g</p>
+        </div>
+      </div>
+
+      <!-- Cart Item List -->
+      <div id="cartItemList" class="flex-1 overflow-y-auto p-4 space-y-3">
+        <!-- Rendered items will appear here -->
+      </div>
+
+      <!-- Voucher / Promo Code Box -->
+      <div class="px-4 py-3 bg-slate-50 border-t border-slate-200">
+        <label class="block text-[11px] font-bold text-slate-700 mb-1">Kode Voucher / Member Gym:</label>
+        <div class="flex gap-2">
+          <input type="text" id="voucherCodeInput" placeholder="Misal: MALANGFIT" class="flex-1 uppercase px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-mono font-bold focus:outline-none focus:border-brand-500">
+          <button onclick="applyVoucherCode()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition">Terapkan</button>
+        </div>
+        <p id="voucherFeedback" class="text-[10px] mt-1 font-semibold"></p>
+      </div>
+
+      <!-- Drawer Bottom Checkout Section -->
+      <div class="p-4 border-t border-slate-200 bg-white space-y-3">
+        <div class="space-y-1.5 text-xs text-slate-600">
+          <div class="flex justify-between">
+            <span>Subtotal Makanan</span>
+            <span class="font-bold text-slate-800" id="cartSubtotalText">Rp 0</span>
+          </div>
+          <div class="flex justify-between text-brand-700" id="cartDiscountRow" style="display: none;">
+            <span>Diskon Promo</span>
+            <span class="font-bold" id="cartDiscountText">- Rp 0</span>
+          </div>
+          <div class="flex justify-between font-extrabold text-base text-slate-900 pt-1 border-t border-slate-100">
+            <span>Total Akhir</span>
+            <span class="text-brand-700" id="cartFinalTotalText">Rp 0</span>
+          </div>
+        </div>
+
+        <button onclick="proceedToPaymentStep()" class="w-full py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-sm shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 transition">
+          <span>Pilih Cara Pembayaran</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="paymentModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 animate-slide-up relative">
+      
+      <button onclick="closePaymentModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center mb-4">
+        <span class="inline-block p-3 rounded-2xl bg-brand-100 text-brand-700 mb-2">
+          <i class="fa-solid fa-wallet text-xl"></i>
+        </span>
+        <h3 class="text-base font-extrabold text-slate-900">Metode Pembayaran</h3>
+        <p class="text-xs text-slate-500" id="paymentModeDescription">Selesaikan pesananmu secara instan</p>
+      </div>
+
+      <!-- Payment Method Selection -->
+      <div class="space-y-2 mb-5">
+        <!-- QRIS Option -->
+        <label class="flex items-center justify-between p-3 rounded-2xl border-2 border-brand-500 bg-brand-50/40 cursor-pointer transition">
+          <div class="flex items-center gap-3">
+            <input type="radio" name="paymentOption" value="qris" checked class="text-brand-600 focus:ring-brand-500">
+            <div>
+              <p class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <i class="fa-solid fa-qrcode text-brand-600"></i> QRIS Dinamis Instan
+              </p>
+              <p class="text-[10px] text-slate-500">GoPay, OVO, Dana, ShopeePay, BCA, Mandiri</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-bold text-brand-700 bg-brand-100 px-2 py-0.5 rounded-full">Otomatis</span>
+        </label>
+
+        <!-- Cashier Option -->
+        <label class="flex items-center justify-between p-3 rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition">
+          <div class="flex items-center gap-3">
+            <input type="radio" name="paymentOption" value="cashier" class="text-brand-600 focus:ring-brand-500">
+            <div>
+              <p class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <i class="fa-solid fa-cash-register text-slate-600"></i> Bayar di Kasir Kedai
+              </p>
+              <p class="text-[10px] text-slate-500">Tunjukkan kode pesanan ke kasir (Tunai / EDC)</p>
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Dynamic QRIS Display Area (Shown if QRIS is selected) -->
+      <div id="qrisContainer" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center mb-5">
+        <p class="text-[11px] font-bold text-slate-700 mb-2">Pindai Kode QRIS di bawah ini:</p>
+        
+        <!-- Synthetic Visual QR Code -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 inline-block shadow-sm">
+          <svg class="w-36 h-36 mx-auto" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="white"/>
+            <!-- Top Left Pos Marker -->
+            <rect x="5" y="5" width="26" height="26" rx="4" fill="#0f172a"/>
+            <rect x="9" y="9" width="18" height="18" rx="2" fill="white"/>
+            <rect x="13" y="13" width="10" height="10" rx="1" fill="#16a34a"/>
+            <!-- Top Right Pos Marker -->
+            <rect x="69" y="5" width="26" height="26" rx="4" fill="#0f172a"/>
+            <rect x="73" y="73" width="18" height="18" rx="2" fill="white"/>
+            <rect x="77" y="13" width="10" height="10" rx="1" fill="#16a34a"/>
+            <!-- Bottom Left Pos Marker -->
+            <rect x="5" y="69" width="26" height="26" rx="4" fill="#0f172a"/>
+            <rect x="9" y="73" width="18" height="18" rx="2" fill="white"/>
+            <rect x="13" y="77" width="10" height="10" rx="1" fill="#16a34a"/>
+            <!-- Center Pattern Dots -->
+            <rect x="36" y="10" width="8" height="8" rx="1" fill="#0f172a"/>
+            <rect x="48" y="14" width="12" height="6" rx="1" fill="#0f172a"/>
+            <rect x="38" y="24" width="6" height="14" rx="1" fill="#0f172a"/>
+            <rect x="48" y="26" width="14" height="6" rx="1" fill="#16a34a"/>
+            <rect x="10" y="38" width="18" height="6" rx="1" fill="#0f172a"/>
+            <rect x="22" y="48" width="8" height="14" rx="1" fill="#0f172a"/>
+            <rect x="36" y="44" width="28" height="14" rx="2" fill="#0f172a"/>
+            <rect x="44" y="64" width="8" height="18" rx="1" fill="#16a34a"/>
+            <rect x="68" y="40" width="18" height="8" rx="1" fill="#0f172a"/>
+            <rect x="76" y="52" width="14" height="14" rx="1" fill="#0f172a"/>
+            <rect x="70" y="70" width="8" height="8" rx="1" fill="#0f172a"/>
+            <rect x="82" y="80" width="10" height="10" rx="1" fill="#0f172a"/>
+            <!-- Center Badge -->
+            <circle cx="50" cy="50" r="10" fill="#16a34a"/>
+            <path d="M47 50L49 52L53 48" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <div class="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-slate-500 font-semibold">
+          <span>Menunggu Pembayaran:</span>
+          <span class="font-mono text-brand-700 font-bold" id="qrisCountdownTimer">04:59</span>
+        </div>
+      </div>
+
+      <button onclick="confirmOrderSuccess()" class="w-full py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md shadow-brand-600/30 flex items-center justify-center gap-2 transition">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>Konfirmasi Selesai Bayar</span>
+      </button>
+
+    </div>
+  </div>
+
+  <div id="activeOrderModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-slide-up relative max-h-[90vh] overflow-y-auto">
+      
+      <button onclick="closeActiveOrderModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center pb-4 border-b border-slate-100">
+        <div class="w-12 h-12 rounded-2xl bg-brand-100 text-brand-700 flex items-center justify-center mx-auto mb-2 text-xl font-bold">
+          <i class="fa-solid fa-receipt"></i>
+        </div>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-brand-700 bg-brand-50 border border-brand-200 px-2 py-0.5 rounded-full" id="orderModeBadge">DINE-IN MEJA 04</span>
+        <h3 class="text-lg font-extrabold text-slate-900 mt-1">Order #<span id="orderIdDisplay">JF-8921</span></h3>
+        <p class="text-xs text-slate-500">Estimasi Selesai: <strong class="text-slate-800" id="orderEstimatedTime">7 Menit Lagi</strong></p>
+      </div>
+
+      <!-- Realtime Stepper Animation -->
+      <div class="py-5">
+        <div class="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+          
+          <!-- Step 1: Pesanan Diterima -->
+          <div class="relative flex items-start gap-3">
+            <div class="absolute -left-6 w-4 h-4 rounded-full bg-brand-600 border-2 border-white ring-2 ring-brand-200 flex items-center justify-center"></div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-900">Pesanan Diterima</h4>
+              <p class="text-[11px] text-slate-500">Masuk ke antrean sistem dapur JUSFriend.</p>
+            </div>
+          </div>
+
+          <!-- Step 2: Dapur Sedang Mengolah (Steamer & Blender) -->
+          <div class="relative flex items-start gap-3" id="stepCooking">
+            <div class="absolute -left-6 w-4 h-4 rounded-full bg-amber-500 border-2 border-white ring-2 ring-amber-200 animate-pulse"></div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-900">Sedang Disiapkan di Dapur</h4>
+              <p class="text-[11px] text-slate-500">Blender buah murni Batu & kukusan protein hangat.</p>
+            </div>
+          </div>
+
+          <!-- Step 3: Siap Disajikan / Diambil -->
+          <div class="relative flex items-start gap-3 opacity-40" id="stepReady">
+            <div class="absolute -left-6 w-4 h-4 rounded-full bg-slate-300 border-2 border-white"></div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-900" id="stepReadyTitle">Siap Diantar ke Meja</h4>
+              <p class="text-[11px] text-slate-500" id="stepReadyDesc">Pelayan akan mengantar pesanan langsung ke nomor meja.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Order Items Detail in Status -->
+      <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs space-y-2 mb-4">
+        <div class="flex justify-between font-bold text-slate-800 pb-1 border-b border-slate-200">
+          <span>Rincian Nutrisi Terpesan:</span>
+          <span class="text-brand-700" id="orderNutrientTotal">320 kkal • 20g Protein</span>
+        </div>
+        <div id="activeOrderItemsList" class="space-y-1 text-slate-600">
+          <!-- Items will be displayed here -->
+        </div>
+      </div>
+
+      <!-- Action: Mark Ready Simulation button for interactive showcase -->
+      <button onclick="simulateOrderReady()" id="simReadyBtn" class="w-full py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-bell"></i>
+        <span>Simulasikan "Pesanan Siap Diambil / Diantar"</span>
+      </button>
+
+    </div>
+  </div>
+
+  <div id="productDetailModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-slide-up relative">
+      <button onclick="closeProductDetailModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div id="productDetailContent">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <div id="loyaltyModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 animate-slide-up relative">
+      <button onclick="closeLoyaltyModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center mb-4">
+        <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-2 text-xl font-bold">
+          <i class="fa-solid fa-stamp"></i>
+        </div>
+        <h3 class="text-base font-extrabold text-slate-900">Kartu Stempel Digital</h3>
+        <p class="text-xs text-slate-500">Beli 8 kali paket sehat, nikmati 1 jus murni GRATIS!</p>
+      </div>
+
+      <!-- 8 Stamp Slots Grid -->
+      <div class="grid grid-cols-4 gap-3 bg-amber-50/50 p-4 rounded-2xl border border-amber-200/60 mb-4" id="stampGridContainer">
+        <!-- Stamps injected dynamically -->
+      </div>
+
+      <p class="text-[11px] text-center text-slate-500 leading-tight">
+        Tersambung otomatis dengan nomor ponselmu setiap kali melakukan pemesanan via Web QR.
+      </p>
+    </div>
+  </div>
+
+  <div id="tablePickerModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xs w-full p-5 shadow-2xl border border-slate-100 animate-slide-up relative">
+      <button onclick="closeTablePickerModal()" class="absolute top-4 right-4 w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <h4 class="text-sm font-extrabold text-slate-900 mb-1">Ganti Nomor Meja</h4>
+      <p class="text-xs text-slate-500 mb-4">Pilih nomor meja tempat kamu duduk di kedai:</p>
+
+      <div class="grid grid-cols-4 gap-2 mb-4" id="tableOptionsGrid">
+        <!-- 1 to 12 tables -->
+      </div>
+
+      <button onclick="closeTablePickerModal()" class="w-full py-2 bg-slate-800 text-white rounded-xl text-xs font-bold">Tutup</button>
+    </div>
+  </div>
+
+  <div id="toastNotification" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-white/10 text-xs font-semibold flex items-center gap-2 transform -translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <i class="fa-solid fa-circle-check text-emerald-400" id="toastIcon"></i>
+    <span id="toastMessage">Pesanan berhasil ditambahkan!</span>
+  </div>
+
+  <script>
+    /* --- Mock Database: Healthy Clean Menu with Local Batu Ingredients & Nutrition Data --- */
+    const MENU_DATABASE = [
+      {
+        id: 'jf-01',
+        name: 'Jus Apel Manalagi Murni',
+        category: 'juice',
+        categoryLabel: 'Jus Buah Murni',
+        price: 14000,
+        calories: 110,
+        protein: 0.8,
+        sugar: 19,
+        badge: 'Petani Kota Batu',
+        description: '100% perasan sari apel Manalagi Batu tanpa gula pasir. Renyah, manis asam alami, kaya antioksidan.',
+        icon: 'fa-apple-whole',
+        iconColor: 'text-emerald-500',
+        bgHue: 'bg-emerald-50',
+        rating: 4.9,
+        orderCount: 420
+      },
+      {
+        id: 'jf-02',
+        name: 'Jus Buah Naga Merah',
+        category: 'juice',
+        categoryLabel: 'Jus Buah Murni',
+        price: 15000,
+        calories: 135,
+        protein: 2.1,
+        sugar: 18,
+        badge: 'Best Seller',
+        description: 'Buah naga segar pilihan kaya serat alami dan magnesium. Lembut di tenggorokan tanpa pemanis buatan.',
+        icon: 'fa-droplet',
+        iconColor: 'text-rose-500',
+        bgHue: 'bg-rose-50',
+        rating: 5.0,
+        orderCount: 580
+      },
+      {
+        id: 'jf-03',
+        name: 'Jus Semangka Mint Fresh',
+        category: 'juice',
+        categoryLabel: 'Jus Buah Murni',
+        price: 13000,
+        calories: 95,
+        protein: 1.2,
+        sugar: 14,
+        badge: 'Rendah Kalori',
+        description: 'Semangka merah hidrasi murni dipadu daun mint segar. Sangat menyegarkan seusai lari pagi atau jam kuliah terik.',
+        icon: 'fa-water',
+        iconColor: 'text-red-400',
+        bgHue: 'bg-red-50',
+        rating: 4.8,
+        orderCount: 310
+      },
+      {
+        id: 'jf-04',
+        name: 'Jus Alpukat Mentega Pure',
+        category: 'juice',
+        categoryLabel: 'Jus Buah Murni',
+        price: 18000,
+        calories: 240,
+        protein: 3.5,
+        sugar: 6,
+        badge: 'Healthy Fats',
+        description: 'Alpukat mentega creamy kaya lemak nabati baik (HDL). Tanpa kental manis cokelat, murni gurih alami.',
+        icon: 'fa-shield-halved',
+        iconColor: 'text-lime-600',
+        bgHue: 'bg-lime-50',
+        rating: 4.9,
+        orderCount: 290
+      },
+      {
+        id: 'jf-05',
+        name: 'Dimsum Dada Ayam Kukus (4 Pcs)',
+        category: 'steam',
+        categoryLabel: 'Kukusan Protein',
+        price: 16000,
+        calories: 180,
+        protein: 18.0,
+        sugar: 1.5,
+        badge: 'Tinggi Protein',
+        description: 'Dibuat dari 100% filet dada ayam giling tanpa tepung tebal dan tanpa minyak goreng. Disajikan dengan saus chili oil rendah sodium.',
+        icon: 'fa-drumstick-bite',
+        iconColor: 'text-amber-600',
+        bgHue: 'bg-amber-50',
+        rating: 5.0,
+        orderCount: 650
+      },
+      {
+        id: 'jf-06',
+        name: 'Tahu Bakso Ayam Kukus (3 Pcs)',
+        category: 'steam',
+        categoryLabel: 'Kukusan Protein',
+        price: 15000,
+        calories: 165,
+        protein: 14.5,
+        sugar: 1.0,
+        badge: 'Snack Hangat',
+        description: 'Tahu pong lembut diisi daging dada ayam cincang bumbu rempah tradisional Malang. Dikukus hangat on-the-spot.',
+        icon: 'fa-cube',
+        iconColor: 'text-orange-500',
+        bgHue: 'bg-orange-50',
+        rating: 4.8,
+        orderCount: 340
+      },
+      {
+        id: 'jf-07',
+        name: 'Edamame Hangat Garlic Herb',
+        category: 'steam',
+        categoryLabel: 'Kukusan Protein',
+        price: 12000,
+        calories: 120,
+        protein: 11.0,
+        sugar: 2.0,
+        badge: 'Plant Protein',
+        description: 'Kedelai edamame hijau segar dikukus dengan taburan garam laut dan serpihan bawang putih wangi.',
+        icon: 'fa-seedling',
+        iconColor: 'text-emerald-600',
+        bgHue: 'bg-emerald-50',
+        rating: 4.7,
+        orderCount: 210
+      },
+      {
+        id: 'jf-08',
+        name: 'Ubi Madu Cilembu Kukus',
+        category: 'steam',
+        categoryLabel: 'Kukusan Protein',
+        price: 11000,
+        calories: 140,
+        protein: 2.0,
+        sugar: 12,
+        badge: 'Karbo Kompleks',
+        description: 'Karbohidrat kompleks pengganjal perut mahasiswa yang manis lumer alami tanpa bikin gula darah melonjak tinggi.',
+        icon: 'fa-cookie-bite',
+        iconColor: 'text-amber-700',
+        bgHue: 'bg-amber-50',
+        rating: 4.8,
+        orderCount: 180
+      },
+      {
+        id: 'jf-09',
+        name: 'Kombo Recovery Post-Workout',
+        category: 'bundle',
+        categoryLabel: 'Paket Kombo Sehat',
+        price: 28000,
+        calories: 315,
+        protein: 20.1,
+        sugar: 19.5,
+        badge: 'Favorit Gymmer',
+        description: 'Bundling: 1x Jus Naga Merah Murni + 1x Dimsum Dada Ayam Kukus (4 pcs). Kembalikan glikogen dan bangun otot seketika.',
+        icon: 'fa-medal',
+        iconColor: 'text-indigo-600',
+        bgHue: 'bg-indigo-50',
+        rating: 5.0,
+        orderCount: 710
+      },
+      {
+        id: 'jf-10',
+        name: 'Paket Defisit Kalori Kuliah',
+        category: 'bundle',
+        categoryLabel: 'Paket Kombo Sehat',
+        price: 24000,
+        calories: 205,
+        protein: 12.2,
+        sugar: 16.0,
+        badge: '< 220 kkal',
+        description: 'Bundling: 1x Jus Semangka Mint + 1x Edamame Hangat. Tetap kenyang fokus menyimak dosen tanpa risiko kantuk berat.',
+        icon: 'fa-scale-balanced',
+        iconColor: 'text-teal-600',
+        bgHue: 'bg-teal-50',
+        rating: 4.9,
+        orderCount: 390
+      },
+      {
+        id: 'jf-11',
+        name: 'Paket Bulking Berprotein Tinggi',
+        category: 'bundle',
+        categoryLabel: 'Paket Kombo Sehat',
+        price: 32000,
+        calories: 405,
+        protein: 29.0,
+        sugar: 8.0,
+        badge: '29g Protein!',
+        description: 'Bundling: 1x Jus Alpukat Pure + 1x Dimsum Dada Ayam + 1x Telur Rebus Herbal. Padat nutrisi pembentukan massa otot.',
+        icon: 'fa-fire-flame-curved',
+        iconColor: 'text-rose-600',
+        bgHue: 'bg-rose-50',
+        rating: 5.0,
+        orderCount: 440
+      },
+      {
+        id: 'jf-12',
+        name: 'Paket Anti Sugar-Crash Nugas',
+        category: 'bundle',
+        categoryLabel: 'Paket Kombo Sehat',
+        price: 27000,
+        calories: 275,
+        protein: 15.3,
+        sugar: 20.0,
+        badge: 'Fokus Nugas',
+        description: 'Bundling: 1x Jus Apel Manalagi Batu + 1x Tahu Bakso Ayam Kukus. Energi stabil tanpa spike gula aren.',
+        icon: 'fa-brain',
+        iconColor: 'text-purple-600',
+        bgHue: 'bg-purple-50',
+        rating: 4.8,
+        orderCount: 260
+      }
+    ];
+
+    /* --- Application State --- */
+    const state = {
+      orderMode: 'dine-in', // 'dine-in' or 'pickup'
+      tableNumber: 4,
+      pickupMinutes: 15,
+      cart: {}, // { itemId: quantity }
+      activeCategory: 'all',
+      maxCalorieFilter: 500,
+      activeGoalPreset: 'all',
+      searchQuery: '',
+      appliedDiscount: 0,
+      appliedVoucherCode: '',
+      loyaltyStamps: 3,
+      currentActiveOrder: null, // { id, mode, table, items, totalCal, totalProtein, totalPrice, timeRemaining, status }
+      orderTimerInterval: null
+    };
+
+    let audioCtx = null;
+    function playChime(type = 'success') {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'success') {
+          osc.frequency.setValueAtTime(587.33, now); // D5
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.15); // A5
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        } else if (type === 'ready') {
+          // Bell chime for order ready
+          [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0.1, now + idx * 0.1);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.1 + 0.6);
+            o.start(now + idx * 0.1);
+            o.stop(now + idx * 0.1 + 0.6);
+          });
+        }
+      } catch (e) {
+        // Fallback silently if audio context is blocked
+      }
+    }
+
+    function initApp() {
+      renderOrderModeBar();
+      renderMenuCards();
+      updateMacroBarometer();
+      renderLoyaltyGrid();
+      renderTablePickerGrid();
+    }
+
+    function setOrderMode(mode) {
+      state.orderMode = mode;
+      
+      const dineInBtn = document.getElementById('modeDineInBtn');
+      const pickupBtn = document.getElementById('modePickupBtn');
+      
+      if (mode === 'dine-in') {
+        dineInBtn.className = 'px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-white text-slate-800 shadow-sm';
+        pickupBtn.className = 'px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900';
+        showToast('Mode pemesanan: Dine-In QR Meja', 'fa-qrcode');
+      } else {
+        pickupBtn.className = 'px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-white text-slate-800 shadow-sm';
+        dineInBtn.className = 'px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900';
+        showToast('Mode pemesanan: Express Pick-Up (Ambil Sendiri)', 'fa-person-walking-luggage');
+      }
+      renderOrderModeBar();
+      updateCartDrawerSubhead();
+    }
+
+    function renderOrderModeBar() {
+      const container = document.getElementById('modeDetailContainer');
+      if (state.orderMode === 'dine-in') {
+        container.innerHTML = `
+          <div class="flex items-center gap-1.5 text-xs text-slate-700 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:border-brand-500 transition" onclick="openTablePickerModal()">
+            <span class="w-2 h-2 rounded-full bg-brand-600"></span>
+            <span>Nomor Meja: <strong class="text-brand-700 font-extrabold text-sm">#${state.tableNumber}</strong></span>
+            <i class="fa-solid fa-pen text-[10px] text-slate-400 ml-1"></i>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="flex items-center gap-1.5 text-xs text-slate-700 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+            <i class="fa-regular fa-clock text-accent-600"></i>
+            <span>Estimasi Pengambilan: <strong class="text-accent-700 font-extrabold">${state.pickupMinutes} Menit</strong></span>
+          </div>
+        `;
+      }
+    }
+
+    function renderTablePickerGrid() {
+      const grid = document.getElementById('tableOptionsGrid');
+      let html = '';
+      for (let i = 1; i <= 12; i++) {
+        const isCurrent = i === state.tableNumber;
+        html += `
+          <button onclick="selectTableNumber(${i})" class="p-2.5 rounded-xl text-xs font-extrabold border transition ${isCurrent ? 'bg-brand-600 text-white border-brand-600' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'}">
+            #${i < 10 ? '0' + i : i}
+          </button>
+        `;
+      }
+      grid.innerHTML = html;
+    }
+
+    function selectTableNumber(num) {
+      state.tableNumber = num;
+      closeTablePickerModal();
+      renderOrderModeBar();
+      updateCartDrawerSubhead();
+      showToast(`Nomor meja diubah ke Meja #${num < 10 ? '0' + num : num}`);
+    }
+
+    function openTablePickerModal() {
+      renderTablePickerGrid();
+      document.getElementById('tablePickerModal').classList.remove('hidden');
+    }
+
+    function closeTablePickerModal() {
+      document.getElementById('tablePickerModal').classList.add('hidden');
+    }
+
+    function filterMenu() {
+      return MENU_DATABASE.filter(item => {
+        // Category check
+        const matchCategory = state.activeCategory === 'all' || item.category === state.activeCategory;
+        
+        // Calorie slider check
+        const matchCalorie = item.calories <= state.maxCalorieFilter;
+        
+        // Goal preset check
+        let matchGoal = true;
+        if (state.activeGoalPreset === 'deficit') {
+          matchGoal = item.calories <= 250;
+        } else if (state.activeGoalPreset === 'protein') {
+          matchGoal = item.protein >= 14;
+        } else if (state.activeGoalPreset === 'sugar') {
+          matchGoal = item.sugar <= 10;
+        }
+
+        // Search query check
+        let matchSearch = true;
+        if (state.searchQuery.trim() !== '') {
+          const q = state.searchQuery.toLowerCase();
+          matchSearch = item.name.toLowerCase().includes(q) || item.description.toLowerCase().includes(q);
+        }
+
+        return matchCategory && matchCalorie && matchGoal && matchSearch;
+      });
+    }
+
+    function renderMenuCards() {
+      const grid = document.getElementById('menuGrid');
+      const emptyState = document.getElementById('noResultsState');
+      const visibleCountElem = document.getElementById('visibleItemCount');
+      const filtered = filterMenu();
+
+      visibleCountElem.innerText = filtered.length;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      grid.innerHTML = filtered.map(item => {
+        const qty = state.cart[item.id] || 0;
+        return `
+          <div class="bg-white rounded-3xl p-4 border border-slate-200/90 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+            
+            <div>
+              <!-- Top Category & Nutrition Badges -->
+              <div class="flex items-center justify-between gap-1 mb-2.5">
+                <span class="text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full ${item.bgHue} text-slate-700 border border-slate-200/60">
+                  ${item.badge}
+                </span>
+                <span class="text-[11px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100 flex items-center gap-1">
+                  <i class="fa-solid fa-fire text-[10px]"></i> ${item.calories} kkal
+                </span>
+              </div>
+
+              <!-- Product Info & Icon -->
+              <div class="flex items-start gap-3 mb-2.5">
+                <div class="w-12 h-12 rounded-2xl ${item.bgHue} ${item.iconColor} flex items-center justify-center text-xl shrink-0 border border-slate-100 shadow-inner cursor-pointer" onclick="openProductDetailModal('${item.id}')">
+                  <i class="fa-solid ${item.icon}"></i>
+                </div>
+                <div class="flex-1 cursor-pointer" onclick="openProductDetailModal('${item.id}')">
+                  <h3 class="text-sm font-extrabold text-slate-900 group-hover:text-brand-600 transition leading-snug">
+                    ${item.name}
+                  </h3>
+                  <p class="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-relaxed">
+                    ${item.description}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Macro Breakdown Row -->
+              <div class="bg-slate-50 rounded-xl p-2 flex items-center justify-between text-[11px] font-bold text-slate-600 mb-3 border border-slate-100">
+                <div class="flex items-center gap-1">
+                  <i class="fa-solid fa-drumstick-bite text-blue-500 text-[10px]"></i>
+                  <span>Prot: <strong class="text-slate-900">${item.protein}g</strong></span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <i class="fa-solid fa-cubes-stacked text-emerald-500 text-[10px]"></i>
+                  <span>Gula: <strong class="text-slate-900">${item.sugar}g</strong></span>
+                </div>
+                <div class="flex items-center gap-0.5 text-amber-500">
+                  <i class="fa-solid fa-star text-[10px]"></i>
+                  <span class="text-slate-700">${item.rating}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Price and Quantity Controls -->
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+              <div>
+                <span class="text-[10px] text-slate-400 font-semibold block leading-none">Harga</span>
+                <span class="text-sm font-extrabold text-slate-900">Rp ${item.price.toLocaleString('id-ID')}</span>
+              </div>
+
+              <!-- Quantity Button or Add Button -->
+              ${qty === 0 ? `
+                <button onclick="addToCart('${item.id}')" class="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-sm">
+                  <i class="fa-solid fa-plus text-[10px]"></i>
+                  <span>Tambah</span>
+                </button>
+              ` : `
+                <div class="flex items-center gap-2 bg-slate-100 px-2 py-1 rounded-xl border border-slate-200">
+                  <button onclick="decrementCart('${item.id}')" class="w-6 h-6 rounded-lg bg-white hover:bg-slate-200 text-slate-800 flex items-center justify-center text-xs font-bold transition shadow-sm">
+                    <i class="fa-solid fa-minus text-[9px]"></i>
+                  </button>
+                  <span class="text-xs font-extrabold text-slate-900 px-1">${qty}</span>
+                  <button onclick="addToCart('${item.id}')" class="w-6 h-6 rounded-lg bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center text-xs font-bold transition shadow-sm">
+                    <i class="fa-solid fa-plus text-[9px]"></i>
+                  </button>
+                </div>
+              `}
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setCategory(cat) {
+      state.activeCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        if (btn.getAttribute('data-cat') === cat) {
+          btn.className = 'cat-pill active px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap bg-slate-900 text-white shadow-sm transition';
+        } else {
+          btn.className = 'cat-pill px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition';
+        }
+      });
+      renderMenuCards();
+    }
+
+    function handleCalorieSlider(val) {
+      state.maxCalorieFilter = parseInt(val, 10);
+      document.getElementById('calorieSliderValue').innerText = `Maks. ${val} kkal`;
+      renderMenuCards();
+    }
+
+    function applyGoalPreset(goal) {
+      state.activeGoalPreset = goal;
+      document.querySelectorAll('.goal-preset-btn').forEach(btn => {
+        if (btn.getAttribute('data-goal') === goal) {
+          btn.className = 'goal-preset-btn active px-3 py-1 rounded-xl text-xs font-semibold bg-brand-600 text-white transition';
+        } else {
+          btn.className = 'goal-preset-btn px-3 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+        }
+      });
+      renderMenuCards();
+    }
+
+    function handleSearch(val) {
+      state.searchQuery = val;
+      renderMenuCards();
+    }
+
+    function resetFilters() {
+      state.activeCategory = 'all';
+      state.maxCalorieFilter = 500;
+      state.activeGoalPreset = 'all';
+      state.searchQuery = '';
+      
+      const searchInput = document.getElementById('menuSearchInput');
+      if (searchInput) searchInput.value = '';
+      
+      const slider = document.getElementById('calorieRange');
+      if (slider) slider.value = 500;
+      document.getElementById('calorieSliderValue').innerText = 'Maks. 500 kkal';
+
+      setCategory('all');
+      applyGoalPreset('all');
+      renderMenuCards();
+      showToast('Filter dikembalikan ke awal');
+    }
+
+    function addToCart(itemId) {
+      state.cart[itemId] = (state.cart[itemId] || 0) + 1;
+      playChime('success');
+      renderMenuCards();
+      updateMacroBarometer();
+      renderCartDrawerItems();
+
+      const item = MENU_DATABASE.find(m => m.id === itemId);
+      showToast(`+1 ${item.name} (${item.calories} kkal)`);
+    }
+
+    function decrementCart(itemId) {
+      if (!state.cart[itemId]) return;
+      state.cart[itemId] -= 1;
+      if (state.cart[itemId] <= 0) {
+        delete state.cart[itemId];
+      }
+      renderMenuCards();
+      updateMacroBarometer();
+      renderCartDrawerItems();
+    }
+
+    function getCartTotals() {
+      let totalCal = 0;
+      let totalProtein = 0;
+      let totalSugar = 0;
+      let totalPrice = 0;
+      let totalCount = 0;
+
+      for (const [id, qty] of Object.entries(state.cart)) {
+        const item = MENU_DATABASE.find(m => m.id === id);
+        if (item) {
+          totalCal += item.calories * qty;
+          totalProtein += item.protein * qty;
+          totalSugar += item.sugar * qty;
+          totalPrice += item.price * qty;
+          totalCount += qty;
+        }
+      }
+
+      return {
+        totalCal,
+        totalProtein: Math.round(totalProtein * 10) / 10,
+        totalSugar: Math.round(totalSugar * 10) / 10,
+        totalPrice,
+        totalCount
+      };
+    }
+
+    function updateMacroBarometer() {
+      const totals = getCartTotals();
+      
+      document.getElementById('barometerTotalCal').innerText = totals.totalCal;
+      document.getElementById('barometerTotalProtein').innerText = totals.totalProtein + 'g';
+      document.getElementById('barometerTotalPrice').innerText = 'Rp ' + totals.totalPrice.toLocaleString('id-ID');
+      document.getElementById('barometerItemCountBadge').innerText = totals.totalCount;
+
+      const checkoutBtn = document.getElementById('checkoutPrimaryBtn');
+      if (totals.totalCount === 0) {
+        checkoutBtn.disabled = true;
+      } else {
+        checkoutBtn.disabled = false;
+      }
+    }
+
+    function openCartDrawer() {
+      renderCartDrawerItems();
+      updateCartDrawerSubhead();
+      document.getElementById('cartDrawer').classList.remove('hidden');
+    }
+
+    function closeCartDrawer() {
+      document.getElementById('cartDrawer').classList.add('hidden');
+    }
+
+    function updateCartDrawerSubhead() {
+      const label = document.getElementById('cartModeSubhead');
+      if (state.orderMode === 'dine-in') {
+        label.innerText = `Mode: Dine-In QR (Meja #${state.tableNumber < 10 ? '0' + state.tableNumber : state.tableNumber})`;
+      } else {
+        label.innerText = `Mode: Express Pick-Up (Siap dalam ${state.pickupMinutes} mnt)`;
+      }
+    }
+
+    function renderCartDrawerItems() {
+      const listContainer = document.getElementById('cartItemList');
+      const totals = getCartTotals();
+
+      document.getElementById('cartTotalCal').innerText = totals.totalCal + ' kkal';
+      document.getElementById('cartTotalProtein').innerText = totals.totalProtein + ' g';
+      document.getElementById('cartTotalSugar').innerText = totals.totalSugar + ' g';
+      
+      const subtotal = totals.totalPrice;
+      const discount = Math.round(subtotal * state.appliedDiscount);
+      const finalTotal = Math.max(0, subtotal - discount);
+
+      document.getElementById('cartSubtotalText').innerText = 'Rp ' + subtotal.toLocaleString('id-ID');
+      
+      const discountRow = document.getElementById('cartDiscountRow');
+      if (discount > 0) {
+        discountRow.style.display = 'flex';
+        document.getElementById('cartDiscountText').innerText = '- Rp ' + discount.toLocaleString('id-ID') + ` (${state.appliedVoucherCode})`;
+      } else {
+        discountRow.style.display = 'none';
+      }
+
+      document.getElementById('cartFinalTotalText').innerText = 'Rp ' + finalTotal.toLocaleString('id-ID');
+
+      if (totals.totalCount === 0) {
+        listContainer.innerHTML = `
+          <div class="text-center py-10 text-slate-400">
+            <i class="fa-solid fa-basket-shopping text-3xl mb-2"></i>
+            <p class="text-xs font-bold text-slate-700">Keranjang masih kosong</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">Pilih menu sehat kaya nutrisi di atas.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listContainer.innerHTML = Object.entries(state.cart).map(([id, qty]) => {
+        const item = MENU_DATABASE.find(m => m.id === id);
+        if (!item) return '';
+        return `
+          <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-2">
+            <div class="flex-1">
+              <h4 class="text-xs font-extrabold text-slate-900">${item.name}</h4>
+              <p class="text-[10px] text-slate-500">${item.calories * qty} kkal • ${Math.round(item.protein * qty * 10)/10}g Protein</p>
+              <p class="text-xs font-bold text-brand-700 mt-1">Rp ${(item.price * qty).toLocaleString('id-ID')}</p>
+            </div>
+
+            <div class="flex items-center gap-2 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-sm">
+              <button onclick="decrementCart('${item.id}')" class="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold">
+                <i class="fa-solid fa-minus text-[8px]"></i>
+              </button>
+              <span class="text-xs font-extrabold text-slate-900">${qty}</span>
+              <button onclick="addToCart('${item.id}')" class="w-5 h-5 rounded bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center text-xs font-bold">
+                <i class="fa-solid fa-plus text-[8px]"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function applyVoucherCode() {
+      const input = document.getElementById('voucherCodeInput');
+      const feedback = document.getElementById('voucherFeedback');
+      const code = input.value.trim().toUpperCase();
+
+      if (code === 'MALANGFIT') {
+        state.appliedDiscount = 0.10; // 10% diskon gym
+        state.appliedVoucherCode = 'MALANGFIT';
+        feedback.innerText = 'Voucher Komunitas Gym Diterima! Diskon 10% aktif.';
+        feedback.className = 'text-[10px] mt-1 font-semibold text-brand-600';
+        playChime('success');
+      } else if (code === 'MAHASISWA') {
+        state.appliedDiscount = 0.05; // 5%
+        state.appliedVoucherCode = 'MAHASISWA';
+        feedback.innerText = 'Voucher Pelajar Diterima! Potongan 5% aktif.';
+        feedback.className = 'text-[10px] mt-1 font-semibold text-brand-600';
+        playChime('success');
+      } else {
+        state.appliedDiscount = 0;
+        state.appliedVoucherCode = '';
+        feedback.innerText = 'Kode tidak valid. Coba: MALANGFIT';
+        feedback.className = 'text-[10px] mt-1 font-semibold text-rose-500';
+      }
+      renderCartDrawerItems();
+    }
+
+    function handlePrimaryCheckoutClick() {
+      const totals = getCartTotals();
+      if (totals.totalCount === 0) {
+        showToast('Pilih menu terlebih dahulu!');
+        return;
+      }
+      openCartDrawer();
+    }
+
+    function proceedToPaymentStep() {
+      closeCartDrawer();
+      const desc = document.getElementById('paymentModeDescription');
+      if (state.orderMode === 'dine-in') {
+        desc.innerText = `Pesanan Dine-In Meja #${state.tableNumber < 10 ? '0' + state.tableNumber : state.tableNumber}`;
+      } else {
+        desc.innerText = `Pesanan Express Pick-Up (Siap dalam ${state.pickupMinutes} menit)`;
+      }
+
+      startQrisCountdown();
+      document.getElementById('paymentModal').classList.remove('hidden');
+    }
+
+    function closePaymentModal() {
+      document.getElementById('paymentModal').classList.add('hidden');
+    }
+
+    let countdownSeconds = 299;
+    let countdownInterval = null;
+    function startQrisCountdown() {
+      countdownSeconds = 299;
+      if (countdownInterval) clearInterval(countdownInterval);
+      const timerElem = document.getElementById('qrisCountdownTimer');
+      
+      countdownInterval = setInterval(() => {
+        countdownSeconds--;
+        if (countdownSeconds <= 0) {
+          clearInterval(countdownInterval);
+          timerElem.innerText = 'Kadaluarsa';
+          return;
+        }
+        const m = Math.floor(countdownSeconds / 60);
+        const s = countdownSeconds % 60;
+        timerElem.innerText = `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+      }, 1000);
+    }
+
+    function confirmOrderSuccess() {
+      closePaymentModal();
+      playChime('success');
+
+      // Generate Random Order ID
+      const orderId = 'JF-' + Math.floor(1000 + Math.random() * 9000);
+      const totals = getCartTotals();
+      const subtotal = totals.totalPrice;
+      const discount = Math.round(subtotal * state.appliedDiscount);
+      const finalPrice = subtotal - discount;
+
+      // Increment stamp
+      if (state.loyaltyStamps < 8) {
+        state.loyaltyStamps += 1;
+        document.getElementById('stampCountBadge').innerText = `${state.loyaltyStamps}/8`;
+        renderLoyaltyGrid();
+      }
+
+      // Save to active order state
+      state.currentActiveOrder = {
+        id: orderId,
+        mode: state.orderMode,
+        table: state.tableNumber,
+        items: JSON.parse(JSON.stringify(state.cart)),
+        totalCal: totals.totalCal,
+        totalProtein: totals.totalProtein,
+        totalPrice: finalPrice,
+        timeRemaining: state.orderMode === 'dine-in' ? 6 : state.pickupMinutes,
+        status: 'cooking' // 'cooking' or 'ready'
+      };
+
+      // Reset Cart
+      state.cart = {};
+      state.appliedDiscount = 0;
+      state.appliedVoucherCode = '';
+      renderMenuCards();
+      updateMacroBarometer();
+
+      // Show Active Order Button in Nav
+      document.getElementById('activeOrderNavBtn').classList.remove('hidden');
+      document.getElementById('activeOrderNavBtn').classList.add('flex');
+
+      openActiveOrderModal();
+      showToast('Pembayaran berhasil! Dapur mulai memproses pesanan.');
+    }
+
+    function openActiveOrderModal() {
+      if (!state.currentActiveOrder) return;
+      
+      const ord = state.currentActiveOrder;
+      document.getElementById('orderIdDisplay').innerText = ord.id;
+      document.getElementById('orderModeBadge').innerText = ord.mode === 'dine-in' 
+        ? `DINE-IN MEJA #${ord.table < 10 ? '0' + ord.table : ord.table}` 
+        : `EXPRESS PICK-UP (COUNTER)`;
+
+      document.getElementById('orderNutrientTotal').innerText = `${ord.totalCal} kkal • ${ord.totalProtein}g Protein`;
+      
+      // Items list in order status
+      const container = document.getElementById('activeOrderItemsList');
+      container.innerHTML = Object.entries(ord.items).map(([id, qty]) => {
+        const item = MENU_DATABASE.find(m => m.id === id);
+        return `<div class="flex justify-between"><span>${qty}x ${item ? item.name : id}</span><span class="font-bold">Rp ${(item ? item.price * qty : 0).toLocaleString('id-ID')}</span></div>`;
+      }).join('');
+
+      updateActiveOrderStepperUI();
+      document.getElementById('activeOrderModal').classList.remove('hidden');
+    }
+
+    function closeActiveOrderModal() {
+      document.getElementById('activeOrderModal').classList.add('hidden');
+    }
+
+    function updateActiveOrderStepperUI() {
+      const ord = state.currentActiveOrder;
+      if (!ord) return;
+
+      const stepCooking = document.getElementById('stepCooking');
+      const stepReady = document.getElementById('stepReady');
+      const readyTitle = document.getElementById('stepReadyTitle');
+      const readyDesc = document.getElementById('stepReadyDesc');
+      const estTime = document.getElementById('orderEstimatedTime');
+
+      if (ord.status === 'cooking') {
+        stepCooking.className = 'relative flex items-start gap-3';
+        stepReady.className = 'relative flex items-start gap-3 opacity-40';
+        estTime.innerText = `${ord.timeRemaining} Menit Lagi`;
+        readyTitle.innerText = ord.mode === 'dine-in' ? 'Siap Diantar ke Meja' : 'Siap Diambil di Pick-Up Counter';
+        readyDesc.innerText = ord.mode === 'dine-in' ? 'Pelayan mengantar langsung ke nomor mejamu.' : 'Datang ke counter dan tunjukkan nomor pesananmu.';
+      } else {
+        // Status ready
+        stepCooking.className = 'relative flex items-start gap-3 opacity-60';
+        stepReady.className = 'relative flex items-start gap-3 opacity-100';
+        estTime.innerText = 'Sudah Siap!';
+        readyTitle.innerHTML = `<span class="text-emerald-600 font-extrabold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> ${ord.mode === 'dine-in' ? 'Pesanan Sedang Diantar ke Mejamu!' : 'Pesanan Siap Diambil di Counter!'}</span>`;
+      }
+    }
+
+    function simulateOrderReady() {
+      if (!state.currentActiveOrder) return;
+      state.currentActiveOrder.status = 'ready';
+      state.currentActiveOrder.timeRemaining = 0;
+      playChime('ready');
+      updateActiveOrderStepperUI();
+      showToast('🔔 Notifikasi: Pesanan Anda telah selesai disiapkan!', 'fa-bell');
+    }
+
+    function openProductDetailModal(itemId) {
+      const item = MENU_DATABASE.find(m => m.id === itemId);
+      if (!item) return;
+
+      const content = document.getElementById('productDetailContent');
+      content.innerHTML = `
+        <div class="text-center mb-4">
+          <div class="w-16 h-16 rounded-3xl ${item.bgHue} ${item.iconColor} flex items-center justify-center mx-auto mb-3 text-3xl border border-slate-100 shadow-inner">
+            <i class="fa-solid ${item.icon}"></i>
+          </div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">${item.categoryLabel}</span>
+          <h3 class="text-base font-extrabold text-slate-900 mt-1">${item.name}</h3>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">${item.description}</p>
+        </div>
+
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2 text-xs mb-4">
+          <h4 class="font-bold text-slate-900 text-[11px] uppercase tracking-wider border-b border-slate-200 pb-1">Kandungan Gizi Terukur:</h4>
+          <div class="grid grid-cols-3 gap-2 text-center pt-1">
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <span class="text-[10px] text-slate-400 font-bold block">KALORI</span>
+              <strong class="text-amber-600 font-extrabold text-sm">${item.calories}</strong>
+              <span class="text-[9px] text-slate-500 block">kkal</span>
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <span class="text-[10px] text-slate-400 font-bold block">PROTEIN</span>
+              <strong class="text-blue-600 font-extrabold text-sm">${item.protein}</strong>
+              <span class="text-[9px] text-slate-500 block">gram</span>
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <span class="text-[10px] text-slate-400 font-bold block">GULA ALAMI</span>
+              <strong class="text-emerald-600 font-extrabold text-sm">${item.sugar}</strong>
+              <span class="text-[9px] text-slate-500 block">gram</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-3 pt-2">
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold block">Harga Porsi</span>
+            <span class="text-base font-extrabold text-slate-900">Rp ${item.price.toLocaleString('id-ID')}</span>
+          </div>
+          <button onclick="addToCart('${item.id}'); closeProductDetailModal();" class="px-5 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md shadow-brand-600/30 flex items-center gap-2 transition">
+            <i class="fa-solid fa-plus"></i>
+            <span>Tambah ke Pesanan</span>
+          </button>
+        </div>
+      `;
+
+      document.getElementById('productDetailModal').classList.remove('hidden');
+    }
+
+    function closeProductDetailModal() {
+      document.getElementById('productDetailModal').classList.add('hidden');
+    }
+
+    function renderLoyaltyGrid() {
+      const container = document.getElementById('stampGridContainer');
+      let html = '';
+      for (let i = 1; i <= 8; i++) {
+        const isStamped = i <= state.loyaltyStamps;
+        html += `
+          <div class="flex flex-col items-center justify-center p-2 rounded-xl border transition ${isStamped ? 'bg-amber-100/80 border-amber-300 text-amber-700 font-extrabold' : 'bg-white border-dashed border-slate-300 text-slate-300'}">
+            ${isStamped ? '<i class="fa-solid fa-stamp text-lg mb-0.5"></i>' : '<span class="text-xs font-bold text-slate-400">#' + i + '</span>'}
+            <span class="text-[9px] font-bold text-slate-600">${i === 8 ? 'GRATIS!' : 'Stempel'}</span>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    function openLoyaltyModal() {
+      renderLoyaltyGrid();
+      document.getElementById('loyaltyModal').classList.remove('hidden');
+    }
+
+    function closeLoyaltyModal() {
+      document.getElementById('loyaltyModal').classList.add('hidden');
+    }
+
+    function resetToHome() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      resetFilters();
+    }
+
+    let toastTimeout = null;
+    function showToast(message, iconClass = 'fa-circle-check') {
+      const toast = document.getElementById('toastNotification');
+      const msgElem = document.getElementById('toastMessage');
+      const iconElem = document.getElementById('toastIcon');
+
+      msgElem.innerText = message;
+      iconElem.className = `fa-solid ${iconClass} text-emerald-400`;
+
+      toast.classList.remove('-translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('-translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // Initialize application on window load
+    window.onload = function () {
+      initApp();
+    };
+  </script>
+</body>
+</html>
